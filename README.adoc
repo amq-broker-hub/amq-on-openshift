@@ -1,0 +1,46 @@
+= Red Hat AMQ Broker on OpenShift
+
+https://access.redhat.com/products/red-hat-amq/[Red Hat AMQ Broker] is the productized version of https://activemq.apache.org/components/artemis/[Apache ActiveMQ Artemis] message broker. This guide is focusing on how to run AMQ Broker on OpenShift (or generally on K8s) using the AMQ Broker Operator, which seems to be the only recommended way.
+
+Versions at the time of writing:
+
+* AMQ Broker: *7.10.1*
+* AMQ Broker Operator: *7.10.1-opr-1*
+
+== Documentation
+
+* Red Hat AMQ Broker v.7.10: https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.10
+** Including operator documentation: https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.10/html/deploying_amq_broker_on_openshift/index
+* Upstream - Artemis User Manual: https://activemq.apache.org/components/artemis/documentation/
+** I recommend reading this doc first to understand how Artemis works
+
+== Downloads
+
+See downloads at https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=jboss.amq.broker
+
+Product:
+
+* *AMQ Broker*: AMQ executable pruduct. Needed only if we plan to run a broker on a server or on localhost.
+* *AMQ Broker Source Code*: Source snapshot for this version
+* *AMQ Broker Maven Repository*: Jars required by the source code. It's easier to just use https://maven.repository.redhat.com/ga maven repo.
+
+Operator:
+
+* *AMQ Broker Container Image Source Code*: Source for broker-image and init-image build. It's useful to understand how the containerized AMQ Broker is started.
+* *AMQ Broker Operator Source Code*: The operator's source code (golang). CRDs, CR examples, reconciliation logic.
+* *AMQ Broker Operator Installation and Example Files*: Installing operator manually without OperatorHub.
+
+Container images:
+
+* *AMQ Broker*: `registry.redhat.io/amq7/amq-broker-rhel8`: https://catalog.redhat.com/software/containers/amq7/amq-broker-rhel8/5e46b4edd70cc54b02be4e9a
+
+* *Init container*: `registry.redhat.io/amq7/amq-broker-init-rhel8`: https://catalog.redhat.com/software/containers/amq7/amq-broker-init-rhel8/603e1e97f6eacfd45bdb1363 
+
+== Upstream links
+
+* Artemis home: https://activemq.apache.org/components/artemis/
+* Artemis source: https://github.com/apache/activemq-artemis
+* Operator home: https://artemiscloud.io/
+* Operator and container source: https://github.com/artemiscloud
+
+
