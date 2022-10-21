@@ -43,4 +43,9 @@ Container images:
 * Operator home: https://artemiscloud.io/
 * Operator and container source: https://github.com/artemiscloud
 
+== Sections
+
+* link:quickstart[*Quickstart*]
+* link:operator-install[*Install operator*]
+
 
