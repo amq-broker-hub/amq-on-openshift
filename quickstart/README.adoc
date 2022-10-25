@@ -1,1 +1,95 @@
 = Quickstart
+
+Use the _OperatorHub_ in OpenShift to install the _Red Hat Integration - AMQ Broker for RHEL8_ operator namespace scoped. Create an _ActiveMQArtemis_ instance like this:
+
+```
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: quickstart
+spec:
+  adminUser: admin
+  adminPassword: admin
+  acceptors:
+    - name: tcp
+      port: 61617
+      protocols: amqp,core,openwire
+  console:
+    expose: true
+  deploymentPlan:
+    image: placeholder
+    size: 1
+    requireLogin: true
+    persistenceEnabled: true
+    storage:
+      size: 2Gi
+    livenessProbe:
+      initialDelaySeconds: 120
+    resources:
+      requests:
+        cpu: 100m
+        memory: 600Mi
+      limits:
+        cpu: "1"
+        memory: 2Gi
+```
+
+This will create an AMQ broker with 512Mi heap size (25% of container limit) and 2Gi persistent disk. We can login to the web console with the set admin credentials through a _Route_. The messaging port 61617 is only available through a _Service_ within our K8s cluster at this point.
+
+To expose the messaging endpoint through a Route, we need to enable SSL. The easiest is to create a required keystore with selfsigned certificates:
+
+```
+# Generate new keystore with a selsfigned key
+$ keytool -genkey -keyalg RSA -keystore broker.ks -storepass changeit -dname 'CN=quickstart.myproject.svc'
+
+# View generated keystore
+$ keytool -list -keystore broker.ks -storepass changeit -v
+Keystore type: PKCS12
+Keystore provider: SUN
+Alias name: mykey
+Entry type: PrivateKeyEntry
+
+# Add keystore to a Secret both as "broker.ks" and "client.ts"
+$ oc create secret generic broker-tls \
+  --from-file=broker.ks=broker.ks \
+  --from-file=client.ts=broker.ks \
+  --from-literal=keyStorePassword=changeit \
+  --from-literal=trustStorePassword=changeit
+```
+
+Create _ActiveMQArtemis_ with ssl enabled:
+
+```
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: quickstart
+spec:
+  adminUser: admin
+  adminPassword: admin
+  acceptors:
+    - name: ssl
+      port: 61617
+      protocols: amqp,core,openwire
+      sslEnabled: true
+      sslSecret: broker-tls
+      expose: true
+  console:
+    expose: true
+  deploymentPlan:
+    ...
+```
+
+Now the messaging port is accessible from outside the cluster via a _passthrough_ Route. Try to verify with `artemis` CLI:
+
+```
+$ ROUTE=$(oc get route quickstart-ssl-0 -ojsonpath='{.spec.host}')
+
+# Using CORE protocol
+$ artemis producer --url "tcp://$ROUTE:443?sslEnabled=true&trustStorePath=broker.ks&trustStorePassword=changeit&verifyHost=false" \
+  --user admin --password admin --message-count 1
+
+# Using AMQP protocol
+$ artemis producer --protocol=amqp --url "amqps://$ROUTE:443?verifyHost=false&trustAll=true" \
+  --user admin --password admin --message-count 1
+```
