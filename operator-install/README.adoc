@@ -1,1 +1,127 @@
 = Install operator
+
+There are two ways to install the AMQ Broker operator:
+
+* Downloading https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?product=jboss.amq.broker[AMQ Broker Operator Installation and Example Files]. It requires _cluster-admin_ permissions to install the CRDs. 
++
+This manual installation is more complex, but it suits better with automated CI/CD pipelines and GitOps, so it's the recommended way for production deployments.
+* Use OpenShift's OperatorHub to install the _Red Hat Integration - AMQ Broker for RHEL8_ operator. This more-or-less can be used without _cluster-admin_ permission.
++
+It's an easy way to install the operator via OpenShift web console, but there are challanges to achieve the same with the `oc` CLI or automation.
+
+An operator can be installed wih two different scope:
+
+* Namespace scoped: when the operator manages brokers in the namespace where it's installed. Generally this is recommended, especially for multi-tenant clusters, because different operator instances and versions can run in different namespaces. It's also easier to debug when things don't go well around deployments.
+* Cluster scoped: when the operator manages brokers in all namespaces. This is ok, when the whole cluster is used by one team, so everyone knows when a new version of the operator is installed.
+
+[NOTE]
+The AMQ Broker operator can install different versions of AMQ Brokers, so upgrading the operator doesn't necessarily mean an upgrade in the deployed broker version. See the environment variables of the operator Pod or its log for supported versions.
+
+== Installation with the OperatorHub
+
+Using the OperatorHub UI is easy, but accessing that menu requires some cluster-scoped permissions, so it may not be available for every user.
+
+Installing operators with CLI is more complex, that's what we need to use for any automation. To install an operator in a namespace you require two resources:
+
+* *OperatorGroup*: this determines if operators in this namespace are cluster or namespace scoped:
++
+----
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  namespace: myproject
+  name: self
+spec:
+  targetNamespaces:
+  - myproject
+----
++
+Creating this resource requires cluster level permissions, as it may have an impact on the cluster. A good practice is to get these created in every application namespace part of some automation, so teams can then add `Subscription` CRs - install operators - on their own behalf.
+
+* *Subscription*: This triggers the installation of the operator in this namespace. Having `edit` permission on the namespace is enough.
++
+----
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: amq-broker-rhel8
+spec:
+  channel: 7.10.x
+  installPlanApproval: Automatic
+  name: amq-broker-rhel8
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+----
+
+While this practically works to start working with the operator, using `installPlanApproval: Automatic` in a production environment is strictly not recommended. `Automatic` approval means that a new version of the operator is installed as soon as it's released in OpenShift's catalog index. This can cause unexpected Pod restarts or even crushing broker deployments. Operators - as every piece of software - can have bugs and should be tested properly for your use cases in a non-prod environment first.
+
+=== Manual InstallPlan approval
+
+To avoid `Automatic` unexpected operator upgrades we need to use `installPlanApproval: Manual`, which requires a deeper understanding of the https://olm.operatorframework.io/[Operator Lifecycle Manager framework]. Approving an operator installation over the OpenShift UI is trivial following the "Upgrade available" link on the "Installed Operators" page, but that doesn't help in case of an automated pipeline or GitOps.
+
+When a `Subscription` is created and `InstallPlan` will show up in the namespace with a random name that we need to patch:
+----
+apiVersion: operators.coreos.com/v1alpha1
+kind: InstallPlan
+metadata:
+  labels:
+    operators.coreos.com/amq-broker-rhel8.myproject: ""
+  name: install-123ab
+  namespace: myproject
+spec:
+  approval: Manual
+  approved: false
+  clusterServiceVersionNames:
+  - amq-broker-operator.v7.10.1-opr-1
+  generation: 1
+----
+
+We need to set `approved: true` to allow the operator installation to progress with a command something like this:
+
+  oc patch installplan/install-123ab --type=json -p='[{"op":"replace","path": "/spec/approved", "value": true}]'`
+
+See the example shell script that can be used in a pipeline for approval: link:post-install.sh[post-install.sh]. Also see related https://gexperts.com/wp/gitops-and-openshift-operators-best-practices/[blog post] and https://github.com/redhat-cop/gitops-catalog/tree/main/installplan-approver[GitOps post hook].
+
+After approving the `InstallPlan` a `ClusterServiceVersion` should show up in the namespace representing the operator installation and of course a `Pod` that's the operator itself. 
+
+[NOTE]
+Having `admin` permission on the namespace may not be enough to patch the `InstallPlan`, then we need a custom `Role` for the `ServiceAccount` or user executing this step.
+
+=== Uninstalling the Operator
+
+Unfortunately OLM was not built a GitOps friendly way, so removing the `Subscription` is not enough to uninstall the operator from a namespace, but we have to delete the `ClusterServiceVersion` too. (Actually it's safe to delete the `Subscription` and `InstallPlan` once the _CSV_ was created and the operator stays in the namespace deployed).
+
+This leads to a common problem when an automated pipeline or GitOps solution removes and recreates the `Subscription` resulting in a `status` error like this: `constraints not satisfiable: clusterserviceversion amq-broker-operator.v7.10.1-opr-1 exists and is not referenced by a subscription`. The workaround is to delete the `ClusterServiceVersion` in a pre-hook or step before the `Subscription` is recreated.
+
+=== Multiple operators in the same namespace
+
+We have to face other problems with _OLM_ when we want to install different operators in the same namespace:
+
+* You can't mix "Automatic" and "Manual" approval in the same namespace. All _Subscriptions_ in a namespace are automatically "Manual" if any one of them was created with `installPlanApproval: Manual`
+* _InstallPlans_ can't be approved individually for each _Subscription_, but they are bound together.
++
+Actually the problem is that an _InstallPlan_ includes all pending _Subscription_ upgrades in the namespace at the moment it's created. So if there is a pending operator upgrade in the namespace when a different operator _Subscription_ is created, the later can't be approved without approving the pending upgrade.
+
+The workaround to avoid these problems is to make sure you never have more than one _Subscriptions_ at the same time, and just delete ALL _Subscriptions_ in the namespace before installing a new one. As explained above, this will leave the existing _ClusterServiceVersions_ - and the operators running - while our automation can just go on with approving our new _Subscription_. See an example link:pre-install.sh[pre-install.sh] that can be used before (re)installing an operator.
+
+== Available versions
+
+Based on our experience only the latest AMQ Broker operator can be installed from a `channel` in the catalog index. This may change in the future, see https://issues.redhat.com/browse/ENTMQBR-7350.
+
+To install a specific vesion of the operator theoretically we could use something like `startingCSV: amq-broker-operator.v7.10.1-opr-1` in the `Subscription`, which doesn't make much sense at this point being only the latest version available.
+
+We can check the latest version available in our catalog-index by running `oc get packagemanifest amq-broker-rhel8` and look for `currentCSV` for the channels. Checking all version available in the catalog-index is more challanging:
+
+* For OpenShift v4.10 catalog:
++
+  docker run --rm registry.redhat.io/redhat/redhat-operator-index:v4.10 render /database/index.db | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
+
+* For OpenShift v4.11 catalog: 
++
+  $ docker run --rm --entrypoint cat registry.redhat.io/redhat/redhat-operator-index:v4.11 /configs/amq-broker-rhel8/catalog.json | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
+
+
+
+
+
+
