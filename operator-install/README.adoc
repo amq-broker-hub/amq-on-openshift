@@ -7,7 +7,7 @@ There are two ways to install the AMQ Broker operator:
 This manual installation is more complex, but it suits better with automated CI/CD pipelines and GitOps, so it's the recommended way for production deployments.
 * Use OpenShift's OperatorHub to install the _Red Hat Integration - AMQ Broker for RHEL8_ operator. This more-or-less can be used without _cluster-admin_ permission.
 +
-It's an easy way to install the operator via OpenShift web console, but there are challanges to achieve the same with the `oc` CLI or automation.
+It's an easy way to install the operator via OpenShift web console, but there are challenges to achieve the same with the `oc` CLI or automation.
 
 An operator can be installed wih two different scope:
 
@@ -108,9 +108,9 @@ The workaround to avoid these problems is to make sure you never have more than 
 
 Based on our experience only the latest AMQ Broker operator can be installed from a `channel` in the catalog index. This may change in the future, see https://issues.redhat.com/browse/ENTMQBR-7350.
 
-To install a specific vesion of the operator theoretically we could use something like `startingCSV: amq-broker-operator.v7.10.1-opr-1` in the `Subscription`, which doesn't make much sense at this point being only the latest version available.
+To install a specific version of the operator theoretically we could use something like `startingCSV: amq-broker-operator.v7.10.1-opr-1` in the `Subscription`, which doesn't make much sense at this point being only the latest version available.
 
-We can check the latest version available in our catalog-index by running `oc get packagemanifest amq-broker-rhel8` and look for `currentCSV` for the channels. Checking all version available in the catalog-index is more challanging:
+We can check the latest version available in our catalog-index by running `oc get packagemanifest amq-broker-rhel8` and look for `currentCSV` for the channels. Checking all version available in the catalog-index is more challenging:
 
 * For OpenShift v4.10 catalog:
 +

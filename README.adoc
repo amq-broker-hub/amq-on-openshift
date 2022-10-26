@@ -20,7 +20,7 @@ See downloads at https://access.redhat.com/jbossnetwork/restricted/listSoftware.
 
 Product:
 
-* *AMQ Broker*: AMQ executable pruduct. Needed only if we plan to run a broker on a server or on localhost.
+* *AMQ Broker*: AMQ executable product. Needed only if we plan to run a broker on a server or on localhost.
 * *AMQ Broker Source Code*: Source snapshot for this version
 * *AMQ Broker Maven Repository*: Jars required by the source code. It's easier to just use https://maven.repository.redhat.com/ga maven repo.
 
