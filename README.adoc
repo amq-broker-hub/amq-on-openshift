@@ -49,7 +49,7 @@ Container images:
 * link:operator-install[*Install operator*]
 * *Configuration*
 * *Web console*
-* *Init container*
+* link:init-container[*Init container*]
 * *Authentication*
 * *Logging*
 * *Monitoring*
