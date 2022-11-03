@@ -55,6 +55,7 @@ Container images:
 * link:monitoring[*Monitoring*]
 * *CI/CD*
 * *Send/receive messages*
+* link:troubleshooting[*Troubleshooting*]
 * *Known issues*
 
 

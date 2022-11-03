@@ -1,0 +1,38 @@
+= Troubleshooting
+
+== Heap dump
+
+To get a heap dump inside the container we can use `jcmd 1 GC.heap_dump /opt/my-broker/data/heap.hprof` or `jmap -dump:format=b,file=/opt/my-broker/data/heap.hprof 1`, then we can `oc cp...` the file over:
+
+----
+HEAP_FILE=heap_$(date +%F-%H-%M).hprof
+# Create
+oc exec my-broker-ss-0 -- jcmd 1 GC.heap_dump /opt/my-broker/data/$HEAP_FILE
+# List, check size
+oc exec my-broker-ss-0 -- ls -las /opt/my-broker/data/
+# Copy
+oc cp my-broker-ss-0:/opt/my-broker/data/$HEAP_FILE ./$HEAP_FILE
+# Delete
+oc exec my-broker-ss-0 -- rm /opt/il3-broker/data/$HEAP_FILE
+----
+
+== Thread dump
+
+Similarly we can get a thread dump with `jcmd 1 Thread.print`:
+
+----
+oc exec my-broker-ss-0 -- jcmd 1 Thread.print
+----
+
+== Attach debugger
+
+To connect an IDE debugger to AMQ broker running in container, we need to enable remote debugging and `oc port-forward...` the port.
+
+We need to add debugging parameters to the JVM `-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005`:
+
+* This can be done with a custom init container modifying `artemis.profile`, like `echo 'JAVA_ARGS="$JAVA_ARGS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"' >>${CONFIG_INSTANCE_DIR}/etc/artemis.profile`
+* Or simply by adding environment variable `JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005` to the broker's _StatefulSet_. We need to scale down the operator before this, otherwise it will reset the changes.
+
+The Java process will wait until we attach a debugger to the process, make sure the `livenessProbe.initialDelaySeconds` is set to high. 
+
+Port forward the "5005" port to your local machine `oc port-forward my-broker-ss-0 5005:5005` and connect with an IDE (e.g. IntelliJ) that has the broker's source code open to `localhost:5005`.
