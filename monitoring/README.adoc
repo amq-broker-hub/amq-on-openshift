@@ -1,0 +1,58 @@
+= Monitoring
+
+AMQ broker supports Prometheus based monitoring. The metrics endpoint can be enabled in the _ActiveMQArtemis_ CR:
+
+----
+spec:
+  deploymentPlan:
+    persistenceEnabled: true
+----
+
+The `/metrics` endpoint is available via the console's port through route, service or within the pod:
+
+----
+# Route:
+curl -vk https://route-hostname/metrics/
+
+# Service
+curl -vk https://my-broker-wsconsj-0.myproject.svc:8161/metrics/
+
+# Inside the Pod
+curl -vk https://$(hostname):8161/metrics/
+----
+
+== Collecting metrics
+
+If https://docs.openshift.com/container-platform/4.11/monitoring/monitoring-overview.html[User Workload Monitoring] is enabled on the OpenShift cluster or a custom Prometheus operator is installed to watch the namespace, we only need to create A _ServiceMonitor_ object to trigger collection of metrics:
+
+----
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-broker
+spec:
+  endpoints:
+    - interval: 30s
+      port: wconsj-.*
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+  podTargetLabels:
+    - ActiveMQArtemis
+    - application
+  selector:
+    matchLabels:
+      ActiveMQArtemis: my-broker
+  jobLabel: ActiveMQArtemis
+----
+
+[NOTE]
+Regular users may not have permissions to create _ServiceMonitors_. Add the `monitoring-edit` _ClusterRole_ to the _User_ or _ServiceAccount_ creating those resources.
+
+To check if the metrics are collected, query one of https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.10/html-single/deploying_amq_broker_on_openshift/index#assembly_br-monitoring-broker-runtime-data-using-prometheus_broker-ocp[Artemis metrics] (e.g `artemis_address_memory_usage`) via OpenShift's _Observe_ menu or directly from Prometheus.
+
+== Dashboard
+
+See our link:dashboard-artemis.json[] Grafana dashboard to visualize the collected metrics. You probably want to customize the dashboard a bit to your requirements.
+
+For a guide how to connect a custom Grafana to OpenShift's _User Workload Monitoring_, see repo https://github.com/bszeti/openshift-app-monitoring-grafana[OpenShift User Workload Monitoring with Grafana].

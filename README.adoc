@@ -52,7 +52,7 @@ Container images:
 * link:init-container[*Init container*]
 * *Authentication*
 * *Logging*
-* *Monitoring*
+* link:monitoring[*Monitoring*]
 * *CI/CD*
 * *Send/receive messages*
 * *Known issues*
