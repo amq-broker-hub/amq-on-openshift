@@ -30,7 +30,9 @@ To connect an IDE debugger to AMQ broker running in container, we need to enable
 
 We need to add debugging parameters to the JVM `-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005`:
 
-* This can be done with a custom init container modifying `artemis.profile`, like `echo 'JAVA_ARGS="$JAVA_ARGS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"' >>${CONFIG_INSTANCE_DIR}/etc/artemis.profile`
+* This can be done with a custom init container modifying `artemis.profile`, like 
++
+`echo 'JAVA_ARGS="$JAVA_ARGS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"' >>${CONFIG_INSTANCE_DIR}/etc/artemis.profile`
 * Or simply by adding environment variable `JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005` to the broker's _StatefulSet_. We need to scale down the operator before this, otherwise it will reset the changes.
 
 The Java process will wait until we attach a debugger to the process, make sure the `livenessProbe.initialDelaySeconds` is set to high. 
