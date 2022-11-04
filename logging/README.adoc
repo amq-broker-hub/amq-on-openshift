@@ -1,0 +1,77 @@
+# Logging
+
+By default the broker writes log on the console - stdout - and also in a file at `/opt/my-broker/data/log/artemis.log` with daily rotation. These log files can grow indefinitely while it's located on the persisted volume, which may cause problems in long terms. 
+
+AMQ uses https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/7.3/html-single/development_guide/index#logging_for_developers[JBoss LogManager], which is configured in `etc/logging.properties`. At this point the operator doesn't support changing logging parameters, so we have to use a custom init container to modify this file. (This may change in the https://issues.redhat.com/browse/ENTMQBR-3588[future].)
+
+[NOTE]
+The web console uses a different logger, so its log lines don't end up in _artemis.log_, only on stdout. Also _logging.properties_ doesn't control its logging.
+
+## Overwrite logging.properties
+
+We can mount a whole _logging.properties_ from a _ConfigMap_, then overwrite the generated one.
+
+In _ActiveMQArtemis_: 
+----
+spec:
+  deploymentPlan:
+    extraMounts:
+      configMaps:
+        - broker-add-files
+----
+
+In _post-config.sh_:
+----
+if [ -f /amq/extra/configmaps/broker-add-files/logging.properties ]; then
+  # link directly (for optional reload)
+  ln -fvs /amq/extra/configmaps/broker-add-files/logging.properties ${CONFIG_INSTANCE_DIR}/etc/
+  # or copy
+  # cp /amq/extra/configmaps/broker-add-files/logging.properties ${CONFIG_INSTANCE_DIR}/etc/
+fi
+----
+
+## Log level
+
+To change the log level of an existing logger:
+----
+sed -i 's/logger.org.apache.activemq.artemis.core.server.level=*/logger.org.apache.activemq.artemis.core.server.level=TRACE/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+----
+
+## Add new logger
+
+Add a new logger (e.g. `org.apache.activemq.artemis.core.protocol`):
+----
+sed -i 's/loggers=*/&,org.apache.activemq.artemis.core.protocol\nlogger.org.apache.activemq.artemis.core.protocol.level=DEBUG/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+----
+
+## Log rotation
+
+Enable log rotation:
+----
+sed -i 's/handler.FILE=.*/handler.FILE=org.jboss.logmanager.handlers.SizeRotatingFileHandler/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+sed -i 's/handler.FILE.properties=.*/handler.FILE.properties=append,autoFlush,rotateSize,maxBackupIndex,fileName/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+sed -i 's/handler.FILE.suffix=.*/handler.FILE.rotateSize=200000000\nhandler.FILE.maxBackupIndex=3/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+cat ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+----
+
+## Add new log handler
+
+Add a new log handler (e.g. Syslog):
+----
+# Define new handler
+echo "
+handler.SYSLOG=org.jboss.logmanager.handlers.SyslogHandler
+handler.SYSLOG.properties=serverHostname,port,protocol,syslogType,useCountingFraming,appName
+handler.SYSLOG.serverHostname=mysyslog.mycompany.com
+handler.SYSLOG.port=514
+handler.SYSLOG.protocol=TCP
+handler.SYSLOG.level=DEBUG
+handler.SYSLOG.useCountingFraming=false
+handler.SYSLOG.syslogType=RFC5424
+handler.SYSLOG.appName=AMQ
+handler.SYSLOG.formatter=PATTERN
+" >>${CONFIG_INSTANCE_DIR}/etc/logging.properties
+# Append to handlers
+sed -i 's/logger.handlers=.*/&,SYSLOG/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+----
+

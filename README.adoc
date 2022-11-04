@@ -51,7 +51,7 @@ Container images:
 * *Web console*
 * link:init-container[*Init container*]
 * *Authentication*
-* *Logging*
+* link:logging[*Logging*]
 * link:monitoring[*Monitoring*]
 * *CI/CD*
 * *Send/receive messages*
