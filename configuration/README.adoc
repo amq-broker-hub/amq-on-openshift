@@ -1,0 +1,3 @@
+= Configuration
+
+For some examples regarding advanced configuration options with the operator (e.g. `brokerProperties`), see https://github.com/andytaylor/stuff/tree/master/operator/broker

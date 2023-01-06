@@ -47,7 +47,7 @@ Container images:
 
 * link:quickstart[*Quickstart*]
 * link:operator-install[*Install operator*]
-* *Configuration*
+* link:configuration[*Configuration*]
 * *Web console*
 * link:init-container[*Init container*]
 * *Authentication*
