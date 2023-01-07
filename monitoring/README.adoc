@@ -5,7 +5,7 @@ AMQ broker supports Prometheus based monitoring. The metrics endpoint can be ena
 ----
 spec:
   deploymentPlan:
-    persistenceEnabled: true
+    enableMetricsPlugin: true
 ----
 
 The `/metrics` endpoint is available via the console's port through route, service or within the pod:
