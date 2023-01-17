@@ -40,3 +40,23 @@ echo 'JAVA_ARGS="$JAVA_ARGS -agentlib:jdwp=transport=dt_socket,server=y,suspend=
 The Java process will wait until we attach a debugger to the process, make sure the `livenessProbe.initialDelaySeconds` is set to high. 
 
 Port forward the "5005" port to your local machine `oc port-forward my-broker-ss-0 5005:5005` and connect with an IDE (e.g. IntelliJ) that has the broker's source code open to `localhost:5005`.
+
+== Critical analyzer
+
+If the critical analyzer causes unexpected - false alarm - restarts, it can be disabled in the _broker.xml_ or with _brokerProperties_: 
+
+```
+  brokerProperties:
+    - criticalAnalyzer=false
+```
+
+We can verify if the analyzer is running by looking for a thread `Thread-0 (-scheduled-threads)` or by enabling TRACE logging:
+
+```
+# In running Pod:
+sed -i 's/logger.org.apache.activemq.artemis.utils.critical.level=.*/logger.org.apache.activemq.artemis.utils.critical.level=TRACE/' /home/jboss/amq-broker/etc/logging.properties
+sed -i 's/handler.CONSOLE.level=.*/handler.CONSOLE.level=TRACE/' /home/jboss/amq-broker/etc/logging.properties
+```
+
+It periodically drops a line like:
+`TRACE [org.apache.activemq.artemis.utils.critical.CriticalAnalyzer] Checking critical analyzer`

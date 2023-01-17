@@ -35,6 +35,8 @@ fi
 To change the log level of an existing logger:
 ----
 sed -i 's/logger.org.apache.activemq.artemis.core.server.level=*/logger.org.apache.activemq.artemis.core.server.level=TRACE/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
+# Enable TRACE logs in stdout:
+sed -i 's/handler.CONSOLE.level=.*/handler.CONSOLE.level=TRACE/' ${CONFIG_INSTANCE_DIR}/etc/logging.properties
 ----
 
 ## Add new logger
