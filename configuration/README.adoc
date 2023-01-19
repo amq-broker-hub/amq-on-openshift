@@ -1,3 +1,9 @@
 = Configuration
 
-For some examples regarding advanced configuration options with the operator (e.g. `brokerProperties`), see https://github.com/andytaylor/stuff/tree/master/operator/broker
+The `brokerProperties` field in the _ActiveMQArtemis_ CR can be used for advanced configuration:
+
+* The `brokerProperties` changes are applied on the top of _broker.xml_, but they are not reflected in _broker.xml_ directly.
+* See docs: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html
+* For some examples regarding advanced configuration options with the operator (e.g. `brokerProperties`), see https://github.com/andytaylor/stuff/tree/master/operator/broker
+* For available properties check this doc: https://github.com/andytaylor/activemq-artemis/blob/confdocs/configuration.md
+* Or the _Configuration_ object in source: https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/config/Configuration.java
