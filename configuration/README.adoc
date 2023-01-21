@@ -1,9 +1,45 @@
 = Configuration
 
-The `brokerProperties` field in the _ActiveMQArtemis_ CR can be used for advanced configuration:
+== brokerProperties
 
-* The `brokerProperties` changes are applied on the top of _broker.xml_, but they are not reflected in _broker.xml_ directly.
+The `brokerProperties` field in the _ActiveMQArtemis_ CR can be used for advanced configuration. Set a list of string with "object.field=value" expressions. Those values are set on the top of _broker.xml_, but they are not reflected in _broker.xml_ directly.
+
 * See docs: https://activemq.apache.org/components/artemis/documentation/latest/configuration-index.html
+
+Available properties:
+
+* Doc: https://github.com/andytaylor/activemq-artemis/blob/confdocs/configuration.md
+* Check the _Configuration_ object in source: https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/config/Configuration.java
+
+Examples:
+
 * For some examples regarding advanced configuration options with the operator (e.g. `brokerProperties`), see https://github.com/andytaylor/stuff/tree/master/operator/broker
-* For available properties check this doc: https://github.com/andytaylor/activemq-artemis/blob/confdocs/configuration.md
-* Or the _Configuration_ object in source: https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/config/Configuration.java
+* Test class: https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/test/java/org/apache/activemq/artemis/core/config/impl/ConfigurationImplTest.java
+
+
+== Pre-create addresses
+
+The operator creates addresses/queues for _ActiveMQArtemisAddress_ CRs like:
+
+```
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemisAddress
+metadata:
+    name: topic1-queue1
+spec:
+    addressName: mytopic
+    queueName: queue1
+    routingType: multicast
+    queueConfiguration:
+      purgeOnNoConsumers: true
+```
+
+These addresses are created by the operator only after the broker has started and the Pod reached _ready_ state. This might be too late in same cases as the clients can connect to the broker before the Pod is ready (Service has `publishNotReadyAddresses: true`). To guarantee that the addresses are created before a client connects, we can add a `<addresses>` in _broker.xml_ with an init container, or use `brokerProperties` like this:
+
+```
+  brokerProperties:
+    - addressConfigurations.mytopic.queueConfigs.queue1.routingType=MULTICAST
+    - addressConfigurations.mytopic.queueConfigs.queue1.purgeOnNoConsumers=true
+    - addressConfigurations.mytopic.queueConfigs.queue2.routingType=MULTICAST
+    - addressConfigurations.myqueue.queueConfigs.myqueue.routingType=ANYCAST
+```
