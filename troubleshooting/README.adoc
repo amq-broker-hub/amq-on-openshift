@@ -60,3 +60,22 @@ sed -i 's/handler.CONSOLE.level=.*/handler.CONSOLE.level=TRACE/' /home/jboss/amq
 
 It periodically drops a line like:
 `TRACE [org.apache.activemq.artemis.utils.critical.CriticalAnalyzer] Checking critical analyzer`
+
+== TLS1.0
+
+AMQ v7.10 runs on JDK17, which has TLSv1.0 and TLSv1.1 disabled. If a client can't support TLSv1.2 (e.g. https://activemq.apache.org/components/nms/providers/activemq/[Apache.NMS.ActiveMQ] v1.6), we may have to re-enable TLSv1.0 in the JDK, by overwriting the default `java.security` file:
+
+Add something like this to the init container:
+```
+# Create security file with "TLSv1" and  "TLSv1.1" removed from disabledAlgorithms
+cat >${CONFIG_INSTANCE_DIR}/etc/java.security <<EOF
+security.useSystemPropertiesFile=false
+jdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, DH keySize < 1024, EC keySize < 224, 3DES_EDE_CBC, anon, NULL
+EOF
+
+# Use security file to overwrite default values. Optionally add "-Djavax.net.debug=all" to see `supported_versions (43)`
+echo '\nJAVA_ARGS="$JAVA_ARGS -Djava.security.properties=/home/jboss/amq-broker/etc/java.security"' >>${CONFIG_INSTANCE_DIR}/etc/artemis.profile
+```
+
+[NOTE]
+The `acceptor.enabledProtocols` value doesn't seem to have an impact on the available TLS versions.
