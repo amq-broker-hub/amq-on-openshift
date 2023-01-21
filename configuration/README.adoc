@@ -43,3 +43,5 @@ These addresses are created by the operator only after the broker has started an
     - addressConfigurations.mytopic.queueConfigs.queue2.routingType=MULTICAST
     - addressConfigurations.myqueue.queueConfigs.myqueue.routingType=ANYCAST
 ```
+
+See fields and values in https://github.com/apache/activemq-artemis/blob/main/artemis-commons/src/main/java/org/apache/activemq/artemis/api/core/QueueConfiguration.java[QueueConfiguration.java].
