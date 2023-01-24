@@ -104,6 +104,12 @@ Actually the problem is that an _InstallPlan_ includes all pending _Subscription
 
 The workaround to avoid these problems is to make sure you never have more than one _Subscriptions_ at the same time, and just delete ALL _Subscriptions_ in the namespace before installing a new one. As explained above, this will leave the existing _ClusterServiceVersions_ - and the operators running - while our automation can just go on with approving our new _Subscription_. See an example link:pre-install.sh[pre-install.sh] that can be used before (re)installing an operator.
 
+=== Troubleshooting
+
+When you delete a _Subscription_ via CLI, the related _ClusterServiceVersion_ is not removed (only the _InstallPlan_). Recreating the _Subscription_ will end up with a status error like `clusterserviceversion amq-broker-operator.v7.10.2-opr-1 exists and is not referenced by a subscription`. The solution is to make sure to delete related CSV too before recreating the _Subscription_ as explained above.
+
+In some rare cases the error message above can still show up despite the CSV was deleted in the namespace. It can be caused by a caching mistake in the OLM framework, you need to restart the `catalog-operator` Pod in the `openshift-operator-lifecycle-manager` namespace to fix that problem.
+
 == Available versions
 
 Based on our experience only the latest AMQ Broker operator can be installed from a `channel` in the catalog index. This may change in the future, see https://issues.redhat.com/browse/ENTMQBR-7350.
@@ -119,6 +125,7 @@ We can check the latest version available in our catalog-index by running `oc ge
 * For OpenShift v4.11 catalog: 
 +
   $ docker run --rm --entrypoint cat registry.redhat.io/redhat/redhat-operator-index:v4.11 /configs/amq-broker-rhel8/catalog.json | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
+
 
 
 
