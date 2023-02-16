@@ -90,6 +90,6 @@ $ artemis producer --url "tcp://$ROUTE:443?sslEnabled=true&trustStorePath=broker
   --user admin --password admin --message-count 1
 
 # Using AMQP protocol
-$ artemis producer --protocol=amqp --url "amqps://$ROUTE:443?verifyHost=false&trustAll=true" \
+$ artemis producer --protocol=amqp --url "amqps://$ROUTE:443?transport.verifyHost=false&transport.trustAll=true" \
   --user admin --password admin --message-count 1
 ```
