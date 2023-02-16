@@ -43,6 +43,12 @@ Container images:
 * Operator home: https://artemiscloud.io/
 * Operator and container source: https://github.com/artemiscloud
 
+== Red Hat builds:
+
+Check these repos to find source for Red Hat builds:
+
+* GitHub: https://github.com/rh-messaging/
+
 == Sections
 
 * link:quickstart[*Quickstart*]

@@ -13,7 +13,7 @@ oc exec my-broker-ss-0 -- ls -las /opt/my-broker/data/
 # Copy
 oc cp my-broker-ss-0:/opt/my-broker/data/$HEAP_FILE ./$HEAP_FILE
 # Delete
-oc exec my-broker-ss-0 -- rm /opt/il3-broker/data/$HEAP_FILE
+oc exec my-broker-ss-0 -- rm /opt/my-broker/data/$HEAP_FILE
 ----
 
 == Thread dump
