@@ -1,2 +1,28 @@
-= Known issues
+== Multicast message loss in a cluster
+
+Brokers in an AMQ cluster automatically forward/redistribute messages to other brokers having related consumers. We can send a message to an address on `broker-0` and have a consumer on a queue behind the address on `broker-1`. Messages waiting on a queue will also be sent to another broker in the cluster if a consumer connects there later. 
+
+A known problem with multicast addresses is that messages can "get lost" if the producers and the consumers connect to a different brokers and the broker having the consumers is restarted. 
+Here is an example:
+
+* Producer sends messages to `address-1` on `broker-0` for multicast (topic)
+* Consumer receives messages from `queue-1` behind `address-1` from `broker-1`
+
+```
+broker-0
+└── address-1 <- [Producer]
+
+broker-1
+└── address-1
+    └── multicast
+        └── queue-1 -> [Consumer]
+```
+
+When both brokers are up, the consumer receives the messages from the producer. If `broker-1` is restarted, temporarily there is no active consumer behind `address-1`, while also there is no queue behind the address on `broker-0`, so the messages sent by the producer are simply dropped on the broker. Practically this means that messages during the `broker-1` Pod restart are lost. This scenario especially effects OpenWire's Virtual Topics.
+
+The solution for the problem is to make sure that `broker-0` has the same multicast `queue-1` behind `address-1` as `broker-1`. In this case the messages are kept on `queue-1` on `broker-0` during `broker-1` restart and they are redistributed to `broker-1` when it's up and the consumer reconnected. How can we make sure that the queue hierarchy is the same on both brokers?:
+
+* Define the queues with `ActiveMQArtemisAddress` CRs: This is an asynchronous operation by the Operator once the broker Pods reach "ready" state, which may cause problems if it's critical to have the queues created before the client apps connect. Additional queues can be added without broker restart.
+* Define the queues in `brokerProperties`: The queues are created before the broker is started, but changes require Pod restart.
+* Synchronize multicast queues between brokers: This can be useful if the queues are auto-created by clients and we don't want to take the maintenance overhead of recording them any other way. Such script can be found in link:multicast-sync-job.yaml[]
 

@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multicast-sync
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: amq
+          image: registry.redhat.io/amq7/amq-broker-rhel8:7.10
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          env:
+            - name: BROKERS
+              value: broker-ss-0.broker-hdls-svc broker-ss-1.broker-hdls-svc
+            - name: USER
+              value: admin
+            - name: PASSWORD
+              value: admin
+            # The cluster connector username/password can also be used here
+            # - name: USER
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: broker-credentials-secret
+            #       key: AMQ_CLUSTER_USER
+            # - name: PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: broker-credentials-secret
+            #       key: AMQ_CLUSTER_PASSWORD
+          command:
+            - /bin/sh
+            - '-c'
+            - |-
+                set -e
+                # Compare all the brokers listed in BROKERS
+                for BROKER_SOURCE in $BROKERS; do
+                for BROKER_TARGET in $BROKERS; do
+                  if [ "$BROKER_SOURCE" != "$BROKER_TARGET" ]; then
+                    echo "Checking if multicast queues on $BROKER_SOURCE exist on $BROKER_TARGET or need to be created"
+                    # Query MULTICAST queues from brokers
+                    QUEUES_SOURCE=$(/opt/amq/bin/artemis queue stat --url tcp://$BROKER_SOURCE:61616 --user $USER --password $PASSWORD --maxRows 99999 --maxColumnSize -1 --field ROUTING_TYPE --operation EQUALS --value MULTICAST | awk  -F "|" '{if (NR>2) {gsub(/[ \t]+$/, "", $2); gsub(/[ \t]+$/, "", $3); print $3 "|" $2}}' | sort)
+                    QUEUES_TARGET=$(/opt/amq/bin/artemis queue stat --url tcp://$BROKER_TARGET:61616 --user $USER --password $PASSWORD --maxRows 99999 --maxColumnSize -1 --field ROUTING_TYPE --operation EQUALS --value MULTICAST | awk  -F "|" '{if (NR>2) {gsub(/[ \t]+$/, "", $2); gsub(/[ \t]+$/, "", $3); print $3 "|" $2}}' | sort)
+                    # Check if queues on source broker exist on target broker
+                    for QUEUE in $QUEUES_SOURCE; do
+                      ADDRESS=${QUEUE%|*}
+                      QUEUENAME=${QUEUE#*|}
+                      # We don't want to sync special/internal queues. Also we should ignore non-durable queues (topic subscription having a temporary queue with UUID name).
+                      if [[  "$ADDRESS" != "activemq.notifications" && "$QUEUENAME" != $.artemis.internal* && ! "$QUEUENAME" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+                        if [[ "$QUEUES_TARGET" =~ "$QUEUE" ]]; then
+                          echo "Exists: $QUEUE"
+                        else
+                          # Create missing queue MULTICAST
+                          /opt/amq/bin/artemis queue create --url tcp://$BROKER_TARGET:61616 --user $USER --password $PASSWORD --auto-create-address --durable --preserve-on-no-consumers --multicast --address $ADDRESS --name $QUEUENAME
+                        fi
+                      fi
+                    done
+                  fi
+                done
+                done

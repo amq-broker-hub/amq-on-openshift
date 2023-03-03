@@ -62,7 +62,7 @@ Check these repos to find source for Red Hat builds:
 * link:cicd[*CI/CD*]
 * *Send/receive messages*
 * link:troubleshooting[*Troubleshooting*]
-* *Known issues*
+* link:known-issues[*Known issues*]
 
 
 // * DR: https://github.com/ryanezil/amq-mirroring-openshift

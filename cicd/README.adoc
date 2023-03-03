@@ -6,8 +6,3 @@ A Helm chart to deploy AMQ broker with the operator can be found at https://gith
 * Broker operator CRs: _ActiveMQArtemis_, _ActiveMQArtemisAddress_, _ActiveMQArtemisSecurity_
 
 This generic Helm chart is a good starting point to implement your own version that's probably more specific to your requirements.
-
-
-
-
-
