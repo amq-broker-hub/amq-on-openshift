@@ -59,9 +59,11 @@ Check these repos to find source for Red Hat builds:
 * *Authentication*
 * link:logging[*Logging*]
 * link:monitoring[*Monitoring*]
-* *CI/CD*
+* link:cicd[*CI/CD*]
 * *Send/receive messages*
 * link:troubleshooting[*Troubleshooting*]
 * *Known issues*
 
 
+// * DR: https://github.com/ryanezil/amq-mirroring-openshift
+// MQTT: https://github.com/ryanezil/messaging-tests
