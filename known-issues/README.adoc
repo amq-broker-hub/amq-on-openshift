@@ -26,3 +26,9 @@ The solution for the problem is to make sure that `broker-0` has the same multic
 * Define the queues in `brokerProperties`: The queues are created before the broker is started, but changes require Pod restart.
 * Synchronize multicast queues between brokers: This can be useful if the queues are auto-created by clients and we don't want to take the maintenance overhead of recording them any other way. Such script can be found in link:multicast-sync-job.yaml[]
 
+[NOTE]
+If a queue was created with `filter` expressions, the expected message redistribution between the brokers only works if the queue has the same filter set on every broker. Make sure that the filter expressions are also synchronized. Filters are not returned by the `artemis` CLI, so you need to query the Jolokia endpoint like this:
+
+```
+curl -skf -u $USER:$PASSWORD "https://${BROKER}:8161/console/jolokia/read/org.apache.activemq.artemis:broker=!%22amq-broker!%22,component=addresses,address=!%22${ADDRESS}!%22,subcomponent=queues,routing-type=!%22multicast!%22,queue=!%22${QUEUENAME}!%22/Filter" | /tmp/jq -r ".value"
+```
