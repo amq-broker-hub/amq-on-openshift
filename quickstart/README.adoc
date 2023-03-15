@@ -93,3 +93,5 @@ $ artemis producer --url "tcp://$ROUTE:443?sslEnabled=true&trustStorePath=broker
 $ artemis producer --protocol=amqp --url "amqps://$ROUTE:443?transport.verifyHost=false&transport.trustAll=true" \
   --user admin --password admin --message-count 1
 ```
+
+See link:../send-receive[Send and receive] for more cli examples.

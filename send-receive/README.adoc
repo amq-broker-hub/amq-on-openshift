@@ -1,0 +1,108 @@
+= Send and receive messages
+
+Solutions to send/receive test messages to broker:
+
+* Artemis CLI: https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.10/html-single/getting_started_with_amq_broker/index#producing-consuming-test-messages-getting-started[`artemis producer`], `artemis consumer`, https://activemq.apache.org/components/artemis/documentation/latest/perf-tools.html[`artemis perf`] commands. Can be used for simple tests with `core` or `amqp` protocols. Can send/receive messages from file. https://github.com/apache/activemq-artemis/tree/main/artemis-cli/src/main/java/org/apache/activemq/artemis/cli/commands[Source]
+* Fuse/Camel based test app: https://github.com/amq-broker-hub/fuse-artemis-test. Supports CORE, AMQP, Openwire. Implemented for certain use cases; fork and customize for your requirements. 
+* Using JMeter with Artemis: https://github.com/amq-broker-hub/jmeter-artemis-test
+
+
+[NOTE]
+It's important to always test the your broker configuration with a test tool matching your actual production applications. The used protocol (AMQP, CORE, Openwire), the message pattern (large messages, message headers, type), the client framework (Java, .NET), the use case (transactions, message bursts, parallel consumers, message volume) all have a significant impact on how the broker works. It's recommended to implement you own test automation matching your use cases.
+
+== Artemis CLI
+
+Simple send and receive:
+
+```
+# Send 2 messages with 1024 chars body 
+./artemis producer --url 'tcp://localhost:61616' --protocol core --user admin --password admin --message-count 2 --message-size 1024  --destination queue://q1 --verbose
+
+# Receive (wait for) 2 messages
+./artemis consumer --url 'tcp://localhost:61616' --protocol core --user admin --password admin --message-count 2 --destination queue://q1 --verbose
+```
+
+=== Send and receive with files
+
+Receive and store messages in a file:
+```
+# Receive 1 message and store in file
+./artemis consumer --url 'tcp://localhost:61616' --protocol core --user admin --password admin --destination queue://q1 --data /tmp/q1.message.xml --message-count 1
+```
+
+Send from file:
+```
+./artemis producer --url 'tcp://localhost:61616' --protocol core --user admin --password admin --destination queue://q2 --data /tmp/q1.message.xml
+```
+
+Exported file example:
+[source,xml]
+----
+<?xml version="1.0"?>
+<messages>
+   <message id="89188" priority="4" expiration="0" timestamp="1677163270943" type="text" user-id="1d742bdb-b388-11ed-b4ff-167bd481e550">
+      <properties>
+         <property name="_AMQ_DUPL_ID" value="1705c384-bbc0-4d78-9e8a-1b7e5fe647a8" type="simple-string"/>
+         <property name="_AMQ_ROUTING_TYPE" value="1" type="byte"/>
+         <property name="_AMQ_GROUP_SEQUENCE" value="0" type="integer"/>
+         <property name="__AMQ_CID" value="ID:bszeti1-mac-50070-1677163270375-0:1" type="simple-string"/>
+         <property name="__HDR_BROKER_IN_TIME" value="1677163270943" type="long"/>
+         <property name="__HDR_COMMAND_ID" value="62" type="integer"/>
+         <property name="__HDR_MESSAGE_ID" value="ID:bszeti1-mac-50070-1677163270375-1:1:1:20:1" type="simple-string"/>
+         <property name="__HDR_DROPPABLE" value="false" type="boolean"/>
+         <property name="__HDR_ARRIVAL" value="0" type="long"/>
+         <property name="__HDR_PRODUCER_ID" value="ID:bszeti1-mac-50070-1677163270375-1:1:1:20" type="simple-string"/>
+         <property name="breadcrumbId" value="ID-bszeti1-mac-1677163268505-0-2" type="simple-string"/>
+         <property name="firedTime" value="Thu Feb 23 09:41:10 EST 2023" type="simple-string"/>
+         <property name="myheader" value="My custom header" type="simple-string"/>
+      </properties>
+      <body>
+         <![CDATA[Hello World]]>
+      </body>
+   </message>
+</messages>
+----
+
+Export messages in 100 chunks to multiple files:
+[source,sh]
+----
+# Receive
+i=0
+while true; do
+  OUTPUT=$(./artemis consumer --url 'tcp://localhost:61616' --user admin --password admin --data ~/tmp/q1/message-$EPOCHREALTIME-$i --message-count 100 --break-on-null --destination queue://q1)
+  echo $OUTPUT
+  if [[ "$OUTPUT" !~ 'Consumed: 0 messages' ]]; then break; fi
+  i=$((i+1))
+done
+
+# Send from multiple files
+for file in ~/tmp/q1/*; do
+  echo $file
+  ./artemis producer --url 'tcp://localhost:61616' --user admin --password admin --data $file --destination queue://q2
+done
+----
+
+Note:
+
+* Multiple `<message>` can be stored in one file
+* Use `--break-on-null` to stop consuming if no more messages left in the queue
+* `--message-count` default is 1000, not "unlimited" on receiver
+* The exported messages have `_AMQ_DUPL_ID` property, so you need to `clearDuplicateIdCache()` before replaying on the same address
+
+=== Artemis CLI with Openshift
+
+To interact through a _Route_ you need to think about SSL:
+
+* CORE trust all:  `--port core --url 'tcp://ssl-route.apps.openshift.domain:443?sslEnabled=true&trustAll=true&verifyHost=false'`
+* CORE trust cert: `--port core --url 'tcp://ssl-route.apps.openshift.domain:443?sslEnabled=true&trustStorePath=./certs/client.ts&trustStorePassword=changeit'`
+* AMQP trust all:  `--port amqp --url 'amqps://ssl-route.apps.openshift.domain:443?transport.verifyHost=false&transport.trustAll=true'`
+* AMQP trust cert: `--port amqp --url 'amqps://ssl-route.apps.openshift.domain:443?transport.trustStoreLocation=./certs/client.ts&transport.trustStorePassword=changeit'`
+
+See URIs for https://access.redhat.com/documentation/en-us/red_hat_amq_clients/2.11/html-single/using_the_amq_core_protocol_jms_client/index#connection_uris[CORE] and https://access.redhat.com/documentation/en-us/red_hat_amq_clients/2.11/html-single/using_the_amq_jms_client/index#connection_uris[AMQP](https://qpid.apache.org/releases/qpid-jms-1.8.0/docs/index.html[qpid])
+
+You can also run `artemis` within the Pod with `oc exec`:
+
+```
+oc exec broker-ss-0 -- sh -c '/opt/amq/bin/artemis queue stat --user admin --password admin --url "tcp://$(hostname):61617?sslEnabled=true;verifyHost=false;trustAll=true" --maxRows 99999 --maxColumnSize -1'
+```
+

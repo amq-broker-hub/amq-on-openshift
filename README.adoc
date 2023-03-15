@@ -60,7 +60,7 @@ Check these repos to find source for Red Hat builds:
 * link:logging[*Logging*]
 * link:monitoring[*Monitoring*]
 * link:cicd[*CI/CD*]
-* *Send/receive messages*
+* link:send-receive[*Send and receive messages*]
 * link:troubleshooting[*Troubleshooting*]
 * link:known-issues[*Known issues*]
 
