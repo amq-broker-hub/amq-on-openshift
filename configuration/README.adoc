@@ -45,3 +45,12 @@ These addresses are created by the operator only after the broker has started an
 ```
 
 See fields and values in https://github.com/apache/activemq-artemis/blob/main/artemis-commons/src/main/java/org/apache/activemq/artemis/api/core/QueueConfiguration.java[QueueConfiguration.java].
+
+== Extra acceptor parameters
+
+In case of acceptor parameters not supported by the _ActiveMQArtemis_ CR (e.g _openwireMaxPacketChunkSize_) we can use expressions like this:
+
+```
+  brokerProperties:
+    - "acceptorConfigurations.myacceptor.extraParams.openwireMaxPacketChunkSize=-1"
+```
