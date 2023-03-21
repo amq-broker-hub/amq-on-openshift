@@ -1,4 +1,4 @@
-if [ "oc get subscription amq-broker-rhel8 -o jsonpath='{.spec.installPlanApproval}')" == "Manual" ]; then
+if [ "oc get subscription.operators.coreos.com amq-broker-rhel8 -o jsonpath='{.spec.installPlanApproval}')" == "Manual" ]; then
   echo 'Waiting for InstallPlan to show up.'
   WHILECMD='[ -z "oc get installplan -l operators.coreos.com/amq-broker-rhel8.myproject -oname)" ]'
   timeout 15m sh -c "while $WHILECMD; do echo Waiting; sleep 10; done"
