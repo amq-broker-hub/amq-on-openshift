@@ -33,4 +33,4 @@ If a queue was created with `filter` expressions, the expected message redistrib
 curl -skf -u $USER:$PASSWORD "https://${BROKER}:8161/console/jolokia/read/org.apache.activemq.artemis:broker=!%22amq-broker!%22,component=addresses,address=!%22${ADDRESS}!%22,subcomponent=queues,routing-type=!%22multicast!%22,queue=!%22${QUEUENAME}!%22/Filter" | jq -r ".value"
 ```
 
-The "jq" tool is not available in AMQ Broker image, but OpenShift link:https://catalog.redhat.com/software/containers/openshift4/ose-cli/5cd9ba3f5a13467289f4d51d[_tools_] image can be added as a side container and its file system can be accessed via `/proc/$PID/root/` in a Pod with `shareProcessNamespace: true`, see link:multicast-sync-job.yaml[].
+The "jq" tool is not available in AMQ Broker image, but OpenShift link:https://catalog.redhat.com/software/containers/openshift4/ose-cli/5cd9ba3f5a13467289f4d51d[_tools_] image can be added as a side container and its file system can be accessed via `/proc/$PID/root/` in a Pod with `shareProcessNamespace: true`, see link:multicast-sync-job-with-jq.yaml[].
