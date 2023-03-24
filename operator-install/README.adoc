@@ -112,21 +112,17 @@ In some rare cases the error message above can still show up despite the CSV was
 
 == Available versions
 
-Based on our experience only the latest AMQ Broker operator can be installed from a `channel` in the catalog index. This may change in the future, see https://issues.redhat.com/browse/ENTMQBR-7350.
+To install a specific version of the operator theoretically we could use `startingCSV: amq-broker-operator.v7.10.2-opr-2-0.1676475747.p` in the `Subscription`.
 
-To install a specific version of the operator theoretically we could use something like `startingCSV: amq-broker-operator.v7.10.1-opr-1` in the `Subscription`, which doesn't make much sense at this point being only the latest version available.
-
-We can check the latest version available in our catalog-index by running `oc get packagemanifest amq-broker-rhel8` and look for `currentCSV` for the channels. Checking all version available in the catalog-index is more challenging:
+We can check the latest version available in our catalog-index by running `oc get packagemanifest amq-broker-rhel8 -oyaml` and look for `currentCSV` for the channels. Checking all version available in the catalog-index is more challenging:
 
 * For OpenShift v4.10 catalog:
 +
-  docker run --rm registry.redhat.io/redhat/redhat-operator-index:v4.10 render /database/index.db | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
+  docker run --pull=always --rm registry.redhat.io/redhat/redhat-operator-index:v4.10 render /database/index.db | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
 
-* For OpenShift v4.11 catalog: 
+* For OpenShift v4.11+ catalog: 
 +
-  $ docker run --rm --entrypoint cat registry.redhat.io/redhat/redhat-operator-index:v4.11 /configs/amq-broker-rhel8/catalog.json | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
-
-
+  $ docker run --pull=always --rm --entrypoint cat registry.redhat.io/redhat/redhat-operator-index:v4.11 /configs/amq-broker-rhel8/catalog.json | jq 'select(.schema == "olm.channel" and (.package | startswith("amq-broker")))'
 
 
 
