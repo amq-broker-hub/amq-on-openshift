@@ -47,6 +47,7 @@ spec:
             - '-c'
             - |-
                 set -e
+                export PID=$(pgrep sleep); export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/proc/$PID/root/usr/lib64/;
                 # Compare all the brokers listed in BROKERS
                 for BROKER_SOURCE in $BROKERS; do
                 for BROKER_TARGET in $BROKERS; do
