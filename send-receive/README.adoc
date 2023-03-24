@@ -10,6 +10,7 @@ Solutions to send/receive test messages to broker:
 [NOTE]
 It's important to always test the your broker configuration with a test tool matching your actual production applications. The used protocol (AMQP, CORE, Openwire), the message pattern (large messages, message headers, type), the client framework (Java, .NET), the use case (transactions, message bursts, parallel consumers, message volume) all have a significant impact on how the broker works. It's recommended to implement you own test automation matching your use cases.
 
+
 == Artemis CLI
 
 Simple send and receive:
@@ -21,6 +22,7 @@ Simple send and receive:
 # Receive (wait for) 2 messages
 ./artemis consumer --url 'tcp://localhost:61616' --protocol core --user admin --password admin --message-count 2 --destination queue://q1 --verbose
 ```
+
 
 === Send and receive with files
 
@@ -88,6 +90,29 @@ Note:
 * Use `--break-on-null` to stop consuming if no more messages left in the queue
 * `--message-count` default is 1000, not "unlimited" on receiver
 * The exported messages have `_AMQ_DUPL_ID` property, so you need to `clearDuplicateIdCache()` before replaying on the same address
+
+
+=== Prune all queues
+
+Simple maintenance script to prune all queues. This can be run in the broker Pod, maybe even added to the image via init container or as extra ConfigMap mount:
+
+```
+# Get QUEUES with messages
+QUEUES=$(/opt/amq/bin/artemis queue stat --url "tcp://$(hostname):61616" --user admin --password admin --maxColumnSize -1 --maxRows 9999 --field MESSAGE_COUNT --operation GREATER_THAN --value 0 | awk  -F "|" "{if (NR!=2) {print \$2}}")
+
+# Build command line with one "artemis queue purge" command per queue
+OC_CMD='echo Purging queues...'
+for QUEUE in $QUEUES; do
+  OC_CMD="$OC_CMD; /opt/amq/bin/artemis queue purge --url "tcp://$(hostname):61616" --user admin --password admin --name $QUEUE"
+done
+
+# Run command line
+sh -c "$OC_CMD"
+```
+
+[NOTE]
+These `artemis` CLI commands can be used with admin users (having _manage_ permissions) including the cluster connection credentials _AMQ_CLUSTER_USER_ and _AMQ_CLUSTER_PASSWORD_ from the _broker-credentials-secret_ Secret.
+
 
 === Artemis CLI with Openshift
 
