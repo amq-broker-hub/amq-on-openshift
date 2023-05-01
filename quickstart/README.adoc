@@ -36,16 +36,17 @@ spec:
 
 This will create an AMQ broker with 512Mi heap size (25% of container limit) and 2Gi persistent disk. We can login to the web console with the set admin credentials through a _Route_. The messaging port 61617 is only available through a _Service_ within our K8s cluster at this point.
 
-To expose the messaging endpoint through a Route, we need to enable SSL. The easiest is to create a required keystore with selfsigned certificates:
+To expose the messaging endpoint through a Route, we need to enable SSL. (In this example we also secure the console endpoint using the same certificate, but it's better to use a separate one in a real world scenario.)
+
+Create a keystore with selfsigned certificates:
 
 ```
 # Generate new keystore with a selsfigned key
-$ keytool -genkey -keyalg RSA -keystore broker.ks -storepass changeit -dname 'CN=quickstart.myproject.svc'
+$ keytool -genkeypair -keyalg RSA -keystore broker.ks -storetype pkcs12 -storepass changeit -keypass changeit -dname 'CN=mybroker' -ext san=dns:mybroker-wconsj-0-svc,dns:mybroker-wconsj-0-svc.myproject.svc,dns:mybroker-ssl-0-svc,dns:mybroker-ssl-0-svc.myproject.svc
 
 # View generated keystore
 $ keytool -list -keystore broker.ks -storepass changeit -v
 Keystore type: PKCS12
-Keystore provider: SUN
 Alias name: mykey
 Entry type: PrivateKeyEntry
 
@@ -76,6 +77,8 @@ spec:
       expose: true
   console:
     expose: true
+    sslEnabled: true
+    sslSecret: broker-tls
   deploymentPlan:
     ...
 ```
