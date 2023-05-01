@@ -63,7 +63,9 @@ It periodically drops a line like:
 
 == TLS1.0
 
-AMQ v7.10 runs on JDK17, which has TLSv1.0 and TLSv1.1 disabled. If a client can't support TLSv1.2 (e.g. https://activemq.apache.org/components/nms/providers/activemq/[Apache.NMS.ActiveMQ] v1.6), we may have to re-enable TLSv1.0 in the JDK, by overwriting the default `java.security` file:
+AMQ v7.10 runs on JDK17, which has TLSv1.0 and TLSv1.1 disabled. Use `keytool -showinfo -tls` to check enabled TLS versions and ciphers in the JVM. The `acceptor.enabledProtocols` and `acceptor.enabledCipherSuites` fields can be used to further limit, but can't be used to enable other options.
+
+If a client can't support TLSv1.2 (e.g. https://activemq.apache.org/components/nms/providers/activemq/[Apache.NMS.ActiveMQ] v1.6), we may have to re-enable TLSv1.0 in the JDK, by overwriting the default `java.security` file:
 
 Add something like this to the init container:
 ```
@@ -77,5 +79,4 @@ EOF
 echo '\nJAVA_ARGS="$JAVA_ARGS -Djava.security.properties=/home/jboss/amq-broker/etc/java.security"' >>${CONFIG_INSTANCE_DIR}/etc/artemis.profile
 ```
 
-[NOTE]
-The `acceptor.enabledProtocols` value doesn't seem to have an impact on the available TLS versions.
+
