@@ -79,4 +79,9 @@ EOF
 echo '\nJAVA_ARGS="$JAVA_ARGS -Djava.security.properties=/home/jboss/amq-broker/etc/java.security"' >>${CONFIG_INSTANCE_DIR}/etc/artemis.profile
 ```
 
+== Java in containers
 
+Running Java 8/11/17 in containers can be non-trivial sometimes. To figure out what settings Java sets automatically we can use these commands:
+
+* Cgroupv1/v2 `java -XshowSettings:system -version`
+* Java defaults: `java -XX:+PrintFlagsFinal -version` Look for _MaxHeapSize_, _MaxRAMFraction_...
