@@ -1,0 +1,72 @@
+= Authentication
+
+== Custom JAAS login
+
+AMQ Broker v7.11 operator has a new feature to allow direct https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.11/html-single/deploying_amq_broker_on_openshift/index#proc-br-configuring-jaas-login-modules-for-authentication_broker-ocp[customization of JAAS login configuration] without using _ActiveMQArtemisSecurity_. With this feature we can dynamically update user credentials and permissions without a broker restart!
+
+We need a _Secret_ (name ending `-jaas-config`) with a mandatory `login.config` entry and any other files needed there:
+
+```
+activemq {
+  org.apache.activemq.artemis.spi.core.security.jaas.PropertiesLoginModule sufficient
+    debug=true
+    reload=true
+    org.apache.activemq.jaas.properties.user="artemis-users.properties"
+    org.apache.activemq.jaas.properties.role="artemis-roles.properties"
+    baseDir="/home/jboss/amq-broker/etc";
+
+  org.apache.activemq.artemis.spi.core.security.jaas.PropertiesLoginModule required
+    debug=true
+    reload=true
+    org.apache.activemq.jaas.properties.user="users.properties"
+    org.apache.activemq.jaas.properties.role="roles.properties";
+};
+```
+
+The first entry is only needed if we want to allow login with the generated admin credentials (in `broker-credentials-secret`), that is required when the operator needs to interact with the broker (e.g. because of _ActiveMQArtemisAddress_ CRs).
+
+The properties files are trivial, see example in link:custom-jaas-config[]. Create _Secret_ like :
+
+[source,sh]
+```
+# Create Secret
+oc create secret generic custom-jaas-config --from-file=login.config --from-file=users.properties --from-file=roles.properties
+```
+
+The _Secret_ is added to `ActiveMQArtemis` as 
+
+```
+spec:
+  deploymentPlan:
+    extraMounts:
+      secrets:
+      - "custom-jaas-config"
+```
+
+Fortunately the Secret can be updated for a running Pod, so we can add/modify user permissions without a broker restart.
+
+[source,sh]
+```
+# Update existing Secret
+oc set data secret/custom-jaas-config --from-file=login.config --from-file=users.properties --from-file=roles.properties
+```
+
+=== Security settings
+
+The permissions to addresses/roles were set in _broker.xml_ `<security-settings>` for non-container deployments. With the operator in OpenShift we can use _ActiveMQArtemisSecurity_ CR. Alternatively now we can use `brokerProperties` in _ActiveMQArtemis_ CR, which - since AMQ Broker operator v7.11 - can be updated without causing a broker restart. Example:
+
+```
+  brokerProperties:
+  - securityRoles.address1.producers.send=true
+  - securityRoles.address1.producers.createAddress=true
+  - securityRoles.address1.producers.createDurableQueue=true
+  # For names with dot, we need to use quotes
+  - securityRoles."my.address"."all.users".send=true
+  - securityRoles."my.address"."all.users".consume=true
+  - securityRoles."my.address"."all.users".createAddress=true
+  - securityRoles."my.address"."all.users".createNonDurableQueue=true
+  - securityRoles."my.address"."all.users".createDurableQueue=true
+```
+
+[NOTE]
+The `brokerProperties` are added to a `broker-props` Secret, that guarantees the updates in running Pods. Size of Secrets in K8s are limited to max 1Mi, which may be a constraint if the `brokerProperties` grows too big.

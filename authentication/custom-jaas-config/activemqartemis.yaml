@@ -1,0 +1,76 @@
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: broker
+spec:
+  acceptors:
+    - bindToAllInterfaces: true
+      expose: true
+      name: port
+      port: 61617
+      protocols: 'amqp,core'
+  console:
+    expose: true
+  deploymentPlan:
+    enableMetricsPlugin: true
+    persistenceEnabled: false
+    requireLogin: true
+    resources:
+      limits:
+        cpu: 1
+        memory: 2Gi
+      requests:
+        cpu: 20m
+        memory: 512Mi
+    extraMounts:
+      secrets:
+      - "custom-jaas-config"
+    size: 1
+  version: 7.11.0
+  brokerProperties:
+  - securityRoles.address1.producers.send=true
+  - securityRoles.address1.producers.createAddress=true
+  - securityRoles.address1.producers.createDurableQueue=true
+  - securityRoles.address1.consumers.consume=true
+  - securityRoles.address1.consumers.createAddress=true
+  - securityRoles.address1.consumers.createNonDurableQueue=true
+  - securityRoles.address1.consumers.createDurableQueue=true
+  # For names with dot, we need to use quotes
+  - securityRoles."my.address"."all.users".send=true
+  - securityRoles."my.address"."all.users".consume=true
+  - securityRoles."my.address"."all.users".createAddress=true
+  - securityRoles."my.address"."all.users".createNonDurableQueue=true
+  - securityRoles."my.address"."all.users".createDurableQueue=true
+  # Rules for "admin" role are already set in broker.xml by default, something like this:
+  # - securityRoles.#.admin.send=true
+  # - securityRoles.#.admin.consume=true
+  # - securityRoles.#.admin.createAddress=true
+  # - securityRoles.#.admin.createNonDurableQueue=true
+  # - securityRoles.#.admin.createDurableQueue=true
+  # - securityRoles.#.admin.deleteAddress=true
+  # - securityRoles.#.admin.deleteNonDurableQueue=true
+  # - securityRoles.#.admin.deleteDurableQueue=true
+  # - securityRoles.#.admin.manage=true
+  # - securityRoles.#.admin.browse=true
+  # Address specific rules don't inherit from more generic ones,
+  # so we have to add permissions for "admin" role again for the addresses above
+  - securityRoles.address1.admin.send=true
+  - securityRoles.address1.admin.consume=true
+  - securityRoles.address1.admin.createAddress=true
+  - securityRoles.address1.admin.createNonDurableQueue=true
+  - securityRoles.address1.admin.createDurableQueue=true
+  - securityRoles.address1.admin.deleteAddress=true
+  - securityRoles.address1.admin.deleteNonDurableQueue=true
+  - securityRoles.address1.admin.deleteDurableQueue=true
+  - securityRoles.address1.admin.manage=true
+  - securityRoles.address1.admin.browse=true
+  - securityRoles."my.address".admin.send=true
+  - securityRoles."my.address".admin.consume=true
+  - securityRoles."my.address".admin.createAddress=true
+  - securityRoles."my.address".admin.createNonDurableQueue=true
+  - securityRoles."my.address".admin.createDurableQueue=true
+  - securityRoles."my.address".admin.deleteAddress=true
+  - securityRoles."my.address".admin.deleteNonDurableQueue=true
+  - securityRoles."my.address".admin.deleteDurableQueue=true
+  - securityRoles."my.address".admin.manage=true
+  - securityRoles."my.address".admin.browse=true

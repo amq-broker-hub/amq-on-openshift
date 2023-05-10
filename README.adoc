@@ -56,7 +56,7 @@ Check these repos to find source for Red Hat builds:
 * link:configuration[*Configuration*]
 * *Web console*
 * link:init-container[*Init container*]
-* *Authentication*
+* link:authentication[*Authentication*]
 * link:logging[*Logging*]
 * link:monitoring[*Monitoring*]
 * link:cicd[*CI/CD*]
