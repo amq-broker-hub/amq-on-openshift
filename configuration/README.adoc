@@ -16,6 +16,8 @@ Examples:
 * For some examples regarding advanced configuration options with the operator (e.g. `brokerProperties`), see https://github.com/andytaylor/stuff/tree/master/operator/broker
 * Test class: https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/test/java/org/apache/activemq/artemis/core/config/impl/ConfigurationImplTest.java
 
+The implementation is based on https://commons.apache.org/proper/commons-beanutils/[Commons BeanUtils].
+
 
 == Pre-create addresses
 
