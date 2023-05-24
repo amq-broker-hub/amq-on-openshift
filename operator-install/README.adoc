@@ -11,8 +11,8 @@ It's an easy way to install the operator via OpenShift web console, but there ar
 
 An operator can be installed wih two different scope:
 
-* Namespace scoped: when the operator manages brokers in the namespace where it's installed. Generally this is recommended, especially for multi-tenant clusters, because different operator instances and versions can run in different namespaces. It's also easier to debug when things don't go well around deployments.
-* Cluster scoped: when the operator manages brokers in all namespaces. This is ok, when the whole cluster is used by one team, so everyone knows when a new version of the operator is installed.
+* Namespace scoped: the operator manages brokers in the namespace where it's installed. This is recommended for multi-tenant clusters, where different operator instances and versions should run in different namespaces. It's also easier to debug when things don't go well around deployments.
+* Cluster scoped: the operator manages brokers in all namespaces. This is the recommended approach - to avoid CRD version conflicts, - but the teams sharing a cluster must cooperate, when a new version of the operator is installed.
 
 [NOTE]
 The AMQ Broker operator can install different versions of AMQ Brokers, so upgrading the operator doesn't necessarily mean an upgrade in the deployed broker version. See the environment variables of the operator Pod or its log for supported versions.
@@ -21,11 +21,12 @@ The AMQ Broker operator can install different versions of AMQ Brokers, so upgrad
 
 Using the OperatorHub UI is easy, but accessing that menu requires some cluster-scoped permissions, so it may not be available for every user.
 
-Installing operators with CLI is more complex, that's what we need to use for any automation. To install an operator in a namespace you require two resources:
+Installing operators with CLI is more complex, but that's what we need to do for any automation. To install an operator in a namespace you require two resources:
 
 * *OperatorGroup*: this determines if operators in this namespace are cluster or namespace scoped:
 +
 ----
+# Namespace scoped
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
@@ -34,9 +35,17 @@ metadata:
 spec:
   targetNamespaces:
   - myproject
+
+# Cluster scoped
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  namespace: operator-amq
+  name: self
+spec: {}
 ----
 +
-Creating this resource requires cluster level permissions, as it may have an impact on the cluster. A good practice is to get these created in every application namespace part of some automation, so teams can then add `Subscription` CRs - install operators - on their own behalf.
+Creating this resource requires cluster level permissions, as it may have an impact on the cluster. A good practice is to get these created part of some automation in every namespace with operators, so teams can then add `Subscription` CRs - install operators - on their own behalf. There can be max one _OperatorGroup_ in a namespace, recommendation is to use a dedicated namespace for each cluster-scoped operator.
 
 * *Subscription*: This triggers the installation of the operator in this namespace. Having `edit` permission on the namespace is enough.
 +
@@ -84,6 +93,7 @@ See the example shell script that can be used in a pipeline for approval: link:p
 
 After approving the `InstallPlan` a `ClusterServiceVersion` should show up in the namespace representing the operator installation and of course a `Pod` that's the operator itself. 
 
+
 [NOTE]
 Having `admin` permission on the namespace may not be enough to patch the `InstallPlan`, then we need a custom `Role` for the `ServiceAccount` or user executing this step.
 
@@ -102,7 +112,7 @@ We have to face other problems with _OLM_ when we want to install different oper
 +
 Actually the problem is that an _InstallPlan_ includes all pending _Subscription_ upgrades in the namespace at the moment it's created. So if there is a pending operator upgrade in the namespace when a different operator _Subscription_ is created, the later can't be approved without approving the pending upgrade.
 
-The workaround to avoid these problems is to make sure you never have more than one _Subscriptions_ at the same time, and just delete ALL _Subscriptions_ in the namespace before installing a new one. As explained above, this will leave the existing _ClusterServiceVersions_ - and the operators running - while our automation can just go on with approving our new _Subscription_. See an example link:pre-install.sh[pre-install.sh] that can be used before (re)installing an operator.
+The workaround to avoid these problems is to make sure you never have more than one _Subscriptions_ at the same time, and just delete ALL _Subscriptions_ in the namespace before installing a new one. As explained above, this will leave the existing _ClusterServiceVersions_ - and the operators running - while our automation can just go on with approving our new _Subscription_. See an example link:pre-install-multisub.sh[pre-install-multisub.sh] and link:post-install-multisub.sh[] script that can be used before and after (re)installing an operator.
 
 === Troubleshooting
 
@@ -112,7 +122,7 @@ In some rare cases the error message above can still show up despite the CSV was
 
 == Available versions
 
-To install a specific version of the operator theoretically we could use `startingCSV: amq-broker-operator.v7.10.2-opr-2-0.1676475747.p` in the `Subscription`.
+To install a specific version of the operator theoretically we should use `startingCSV: amq-broker-operator.v7.10.2-opr-2-0.1676475747.p` in the `Subscription`.
 
 We can check the latest version available in our catalog-index by running `oc get packagemanifest amq-broker-rhel8 -oyaml` and look for `currentCSV` for the channels. Checking all version available in the catalog-index is more challenging:
 
