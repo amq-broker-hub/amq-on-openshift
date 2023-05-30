@@ -71,7 +71,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1685457695060,
+  "iteration": 1685460061244,
   "links": [],
   "panels": [
     {
@@ -217,13 +217,17 @@
       "pluginVersion": "7.5.17",
       "targets": [
         {
-          "expr": "sum(avg_over_time(jvm_memory_used_bytes{area=~\"heap\", pod=~\"$instance\", namespace=~\"$namespace\"}[1m]))*100/sum(avg_over_time(jvm_memory_max_bytes{area=~\"heap\", pod=~\"$instance\", namespace=~\"$namespace\"}[5m]))",
+          "exemplar": true,
+          "expr": "sum by (broker) ( artemis_address_memory_usage_percentage{pod=\"$instance\", namespace=\"$namespace\"} )",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{ broker }}",
           "refId": "A"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Heap Usage",
+      "title": "Global Max Usage",
       "type": "gauge"
     },
     {
@@ -2132,6 +2136,6 @@
   },
   "timezone": "",
   "title": "AMQ Broker",
-  "uid": null,
+  "uid": "0f624c32b316af4124a9fce237dae9a58359a055",
   "version": 1
 }
