@@ -45,6 +45,12 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
     }
   ],
   "annotations": {
@@ -483,13 +489,287 @@
       "type": "gauge"
     },
     {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "dateTimeAsIso"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 0,
+        "y": 8
+      },
+      "id": 53,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.5.17",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "avg(kube_pod_start_time{namespace=\"$namespace\",pod=\"$instance\"})*1000",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Start Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 5,
+        "y": 8
+      },
+      "id": 55,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.5.17",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "time() - avg(kube_pod_start_time{namespace=\"$namespace\",pod=\"$instance\"})",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Up Time",
+      "type": "stat"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 10,
+        "y": 8
+      },
+      "id": 56,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.5.17",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "topk(1, increase(kube_pod_container_status_restarts_total{namespace=\"$namespace\",pod=\"$instance\"}[7d]))",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "Restart Count",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Restart Count / 7days",
+      "type": "stat"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 10,
+        "x": 14,
+        "y": 8
+      },
+      "id": 57,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "7.5.17",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "kube_pod_labels{namespace=\"$namespace\", pod=\"$instance\", label_rht_subcomp =~ \"broker-amq\"} unless kube_pod_labels{namespace=\"$namespace\", pod=\"$instance\", label_rht_coom =~ \"AMQ\"}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Operator Version",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "label_app",
+                "label_app_kubernetes_io_version",
+                "label_com_company",
+                "label_rht_comp",
+                "label_rht_comp_ver"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "label_app": 4,
+              "label_app_kubernetes_io_version": 2,
+              "label_com_company": 3,
+              "label_rht_comp": 0,
+              "label_rht_comp_ver": 1
+            },
+            "renameByName": {
+              "label_app": "App Name",
+              "label_app_kubernetes_io_version": "startingCSV",
+              "label_application": "",
+              "label_com_company": "Dev Company",
+              "label_rht_comp": "Component",
+              "label_rht_comp_ver": "Comp Version"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
       "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 14
       },
       "id": 47,
       "panels": [],
@@ -511,13 +791,13 @@
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 24,
         "x": 0,
-        "y": 9
+        "y": 15
       },
       "hiddenSeries": false,
-      "id": 51,
+      "id": 52,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -631,7 +911,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 23
       },
       "hiddenSeries": false,
       "id": 7,
@@ -750,7 +1030,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 30
       },
       "hiddenSeries": false,
       "id": 37,
@@ -867,7 +1147,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 30
       },
       "hiddenSeries": false,
       "id": 9,
@@ -971,7 +1251,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 37
       },
       "id": 45,
       "panels": [],
@@ -997,7 +1277,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 38
       },
       "hiddenSeries": false,
       "id": 11,
@@ -1116,7 +1396,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 45
       },
       "hiddenSeries": false,
       "id": 50,
@@ -1231,7 +1511,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 52
       },
       "hiddenSeries": false,
       "id": 31,
@@ -1332,7 +1612,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 52
+        "y": 59
       },
       "hiddenSeries": false,
       "id": 34,
@@ -1433,7 +1713,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 59
+        "y": 66
       },
       "hiddenSeries": false,
       "id": 33,
@@ -1534,10 +1814,10 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 73
       },
       "hiddenSeries": false,
-      "id": 52,
+      "id": 60,
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -1626,7 +1906,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 73
+        "y": 80
       },
       "id": 43,
       "panels": [],
@@ -1651,7 +1931,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 74
+        "y": 81
       },
       "hiddenSeries": false,
       "id": 48,
@@ -1752,7 +2032,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 74
+        "y": 81
       },
       "hiddenSeries": false,
       "id": 29,
