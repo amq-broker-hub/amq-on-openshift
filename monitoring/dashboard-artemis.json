@@ -45,12 +45,6 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "table",
-      "name": "Table",
-      "version": ""
     }
   ],
   "annotations": {
@@ -196,7 +190,7 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 5,
+        "w": 4,
         "x": 0,
         "y": 2
       },
@@ -256,8 +250,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 5,
-        "x": 5,
+        "w": 4,
+        "x": 4,
         "y": 2
       },
       "id": 1,
@@ -323,7 +317,7 @@
       "gridPos": {
         "h": 6,
         "w": 4,
-        "x": 10,
+        "x": 8,
         "y": 2
       },
       "id": 23,
@@ -384,8 +378,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 5,
-        "x": 14,
+        "w": 4,
+        "x": 12,
         "y": 2
       },
       "id": 36,
@@ -454,8 +448,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 5,
-        "x": 19,
+        "w": 4,
+        "x": 16,
         "y": 2
       },
       "id": 49,
@@ -502,20 +496,23 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
-          },
-          "unit": "dateTimeAsIso"
+          }
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 0,
-        "y": 8
+        "h": 2,
+        "w": 4,
+        "x": 20,
+        "y": 2
       },
-      "id": 53,
+      "id": 61,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -529,22 +526,23 @@
           "values": false
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "name"
       },
-      "pluginVersion": "7.5.17",
+      "pluginVersion": "7.5.16",
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(kube_pod_start_time{namespace=\"$namespace\",pod=\"$instance\"})*1000",
+          "expr": "kube_pod_labels{namespace=\"$namespace\", pod=\"$instance\", label_rht_subcomp =~ \"broker-amq\"}",
+          "format": "time_series",
           "instant": true,
           "interval": "",
-          "legendFormat": "",
+          "legendFormat": "{{ label_rht_comp_ver }}",
           "refId": "A"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Start Time",
+      "title": "Broker version",
       "type": "stat"
     },
     {
@@ -564,17 +562,17 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "dateTimeAsIso"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 5,
-        "y": 8
+        "h": 2,
+        "w": 4,
+        "x": 20,
+        "y": 4
       },
-      "id": 55,
+      "id": 53,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -590,11 +588,11 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.17",
+      "pluginVersion": "7.5.16",
       "targets": [
         {
           "exemplar": true,
-          "expr": "time() - avg(kube_pod_start_time{namespace=\"$namespace\",pod=\"$instance\"})",
+          "expr": "kube_pod_start_time{namespace=\"$namespace\",pod=\"$instance\"}*1000",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -603,7 +601,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Up Time",
+      "title": "Start Time",
       "type": "stat"
     },
     {
@@ -633,10 +631,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 2,
         "w": 4,
-        "x": 10,
-        "y": 8
+        "x": 20,
+        "y": 6
       },
       "id": 56,
       "options": {
@@ -654,7 +652,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.17",
+      "pluginVersion": "7.5.16",
       "targets": [
         {
           "exemplar": true,
@@ -669,98 +667,6 @@
       "timeShift": null,
       "title": "Restart Count / 7days",
       "type": "stat"
-    },
-    {
-      "datasource": "${DS_PROMETHEUS}",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 10,
-        "x": 14,
-        "y": 8
-      },
-      "id": 57,
-      "options": {
-        "showHeader": true
-      },
-      "pluginVersion": "7.5.17",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "kube_pod_labels{namespace=\"$namespace\", pod=\"$instance\", label_rht_subcomp =~ \"broker-amq\"} unless kube_pod_labels{namespace=\"$namespace\", pod=\"$instance\", label_rht_coom =~ \"AMQ\"}",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Operator Version",
-      "transformations": [
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": [
-                "label_app",
-                "label_app_kubernetes_io_version",
-                "label_com_company",
-                "label_rht_comp",
-                "label_rht_comp_ver"
-              ]
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {
-              "label_app": 4,
-              "label_app_kubernetes_io_version": 2,
-              "label_com_company": 3,
-              "label_rht_comp": 0,
-              "label_rht_comp_ver": 1
-            },
-            "renameByName": {
-              "label_app": "App Name",
-              "label_app_kubernetes_io_version": "startingCSV",
-              "label_application": "",
-              "label_com_company": "Dev Company",
-              "label_rht_comp": "Component",
-              "label_rht_comp_ver": "Comp Version"
-            }
-          }
-        }
-      ],
-      "type": "table"
     },
     {
       "collapsed": false,
