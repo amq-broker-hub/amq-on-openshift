@@ -817,7 +817,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 17
       },
       "hiddenSeries": false,
       "id": 7,
@@ -852,6 +852,30 @@
       "targets": [
         {
           "exemplar": true,
+          "expr": "sum(kube_pod_container_resource_limits{unit=\"byte\",namespace=\"$namespace\",pod=\"$instance\"}) ",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Container Limit",
+          "refId": "Limit"
+        },
+        {
+          "exemplar": true,
+          "expr": "kube_pod_container_resource_requests{unit=\"byte\",namespace=\"$namespace\",pod=\"$instance\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Container Request",
+          "refId": "Request"
+        },
+        {
+          "exemplar": true,
+          "expr": "max_over_time(container_memory_rss{container=\"broker-container\",pod=\"$instance\",namespace=\"$namespace\"}[1d])",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Container RSS",
+          "refId": "RSS"
+        },
+        {
+          "exemplar": true,
           "expr": "sum(jvm_memory_max_bytes{area=\"heap\", pod=\"$instance\", namespace=\"$namespace\"})",
           "hide": false,
           "interval": "",
@@ -868,7 +892,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum by (broker) (artemis_address_memory_usage{pod=\"$instance\",  namespace=\"$namespace\"})",
+          "expr": "artemis_address_memory_usage{pod=\"$instance\",  namespace=\"$namespace\"}",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
