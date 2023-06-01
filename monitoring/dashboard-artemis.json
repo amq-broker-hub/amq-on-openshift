@@ -735,23 +735,23 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(kube_pod_container_resource_limits{resource=\"cpu\", pod=\"$instance\", namespace=\"$namespace\"})",
+          "expr": "kube_pod_container_resource_limits{resource=\"cpu\", pod=\"$instance\", namespace=\"$namespace\"}",
           "hide": false,
           "interval": "",
-          "legendFormat": "Limit",
+          "legendFormat": "Container Limit",
           "refId": "CPU limit"
         },
         {
           "exemplar": true,
-          "expr": "sum(kube_pod_container_resource_requests{resource=\"cpu\", pod=\"$instance\", namespace=\"$namespace\"})",
+          "expr": "kube_pod_container_resource_requests{resource=\"cpu\", pod=\"$instance\", namespace=\"$namespace\"}",
           "hide": false,
           "interval": "",
-          "legendFormat": "Request",
+          "legendFormat": "Container Request",
           "refId": "CPU request"
         },
         {
           "exemplar": true,
-          "expr": "sum(pod:container_cpu_usage:sum{pod=\"$instance\", namespace=\"$namespace\"})",
+          "expr": "pod:container_cpu_usage:sum{pod=\"$instance\", namespace=\"$namespace\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "Usage",
@@ -852,7 +852,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(kube_pod_container_resource_limits{unit=\"byte\",namespace=\"$namespace\",pod=\"$instance\"}) ",
+          "expr": "kube_pod_container_resource_limits{unit=\"byte\",namespace=\"$namespace\",pod=\"$instance\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "Container Limit",
