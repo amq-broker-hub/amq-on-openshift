@@ -97,6 +97,8 @@ After approving the `InstallPlan` a `ClusterServiceVersion` should show up in th
 [NOTE]
 Having `admin` permission on the namespace may not be enough to patch the `InstallPlan`, then we need a custom `Role` for the `ServiceAccount` or user executing this step.
 
+See the Helm chart link:amq-operator-helm-chart[] that can be used to install AMQ Broker operator with approval hook.
+
 === Uninstalling the Operator
 
 Unfortunately OLM was not built a GitOps friendly way, so removing the `Subscription` is not enough to uninstall the operator from a namespace, but we have to delete the `ClusterServiceVersion` too. (Actually it's safe to delete the `Subscription` and `InstallPlan` once the _CSV_ was created and the operator stays in the namespace deployed).

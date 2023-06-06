@@ -1,0 +1,5 @@
+# Operator installed cluster or namespace scoped - see OperatorGroup
+scope: cluster
+channel: 7.11.x
+installPlanApproval: Manual
+# startingCSV: amq-broker-operator.v7.11.0-opr-2

@@ -1,0 +1,101 @@
+---
+{{- if eq .Values.installPlanApproval "Manual"}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: helm-amq-operator-post-install-hook
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      name: {{ .Release.Name }}-post-install-hook
+    spec:
+      restartPolicy: Never
+      serviceAccountName: helm-amq-operator-post-install-hook
+      containers:
+      - name: main
+        image: "image-registry.openshift-image-registry.svc:5000/openshift/tools:latest"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          echo 'Wait for InstallPlan'
+          WHILECMD='[ -z "$(oc get subscriptions.operators.coreos.com amq-broker-rhel8 -o jsonpath={.status.installPlanRef.name})" ]'
+          timeout 5m sh -c "while $WHILECMD; do echo Waiting; sleep 10; done"
+
+          # Get last InstallPlan for Subscription
+          installplan=$(oc get subscriptions.operators.coreos.com amq-broker-rhel8 -o jsonpath={.status.installPlanRef.name})
+          if [ -z "$installplan" ]; then
+            echo "No InstallPlan was found for subscription amq-broker-rhel8. This indicates a failure about operator installation."
+            exit 1
+          fi
+
+          # If startingCSV is set, patch InstallPlan only with matching "clusterServiceVersionNames" to avoid unexpected upgrades.
+          startingCSV=$(oc get subscription.operators.coreos.com amq-broker-rhel8 -o jsonpath='{.spec.startingCSV}')
+          if [ -n "$startingCSV" ]; then
+            echo "Check if InstallPlan $installplan has CSV $startingCSV"
+            installplan=$(oc get installplan.operators.coreos.com $installplan -ojson | jq -r 'select( .spec.clusterServiceVersionNames[] | contains("'$startingCSV'")) | .metadata.name')
+            if [ -z "$installplan" ]; then
+              echo "InstallPlan doesn't have expected CSV $startingCSV. Won't approve."
+              exit 0
+            fi
+          fi
+          
+          # Approve the InstallPlan
+          if [[ "$(oc get installplan.operators.coreos.com $installplan -o jsonpath='{.spec.approved}')" == "false" ]]; then
+            echo "Approving InstallPlan $installplan"
+            oc patch installplan.operators.coreos.com $installplan --type=json -p='[{"op":"replace","path": "/spec/approved", "value": true}]'
+          else
+            echo "InstallPlan $installplan was already approved"
+          fi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: helm-amq-operator-post-install-hook
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: helm-amq-operator-post-install-hook
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - subscriptions
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - installplans
+  verbs:
+  - get
+  - list
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: helm-amq-operator-post-install-hook
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: helm-amq-operator-post-install-hook
+subjects:
+- kind: ServiceAccount
+  name: helm-amq-operator-post-install-hook
+{{- end }}

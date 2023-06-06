@@ -1,0 +1,24 @@
+# Helm chart to install AMQ Operator
+
+This chart can be used to install AMQ operator namespace scoped or cluster scoped in OpenShift.
+
+Values:
+
+* `scope`: Scope of the operator installation (see _OperatorGroup_) - `cluster` or `namespace`
+* `channel`: Catalog channel to be used - `7.x`, `7.10.x`, `7.11.x`
+* `installPlanApproval`: `Manual` (recommended) or `Automatic`
+* `startingCSV`: (optional, but recommended) e.g.: `amq-broker-operator.v7.11.0-opr-2`
+
+The Helm chart also has hook:
+
+* _post-install-hook-job_: Approves the _InstallPlan_ in case of `Manual` _installPlanApproval_
+* _post-delete-hook-job_: Deletes the _ClusterServiceVersion_ when the Helm chart is uninstalled. Otherwise we would run into error when we reinstall again.
+
+For cluster scoped installation of the operator it's recommended to use a dedicated namespace, where no other operators are installed. 
+
+To change the installed operator version the recommended way is to uninstall and reinstall the Helm chart (with a new _startingCSV_).
+
+Used sources:
+
+* https://github.com/seravat/amq-openshift-helm-chart/
+* https://github.com/redhat-cop/gitops-catalog/tree/main/installplan-approver

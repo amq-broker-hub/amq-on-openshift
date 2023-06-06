@@ -1,0 +1,14 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+{{- if eq .Values.scope "cluster" }}
+metadata:
+  name: cluster
+spec: {}
+{{- else }}
+metadata:
+  name: self
+spec:
+  targetNamespaces:
+    - {{ .Release.Namespace }}
+{{- end }}
+
