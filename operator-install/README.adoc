@@ -93,7 +93,6 @@ See the example shell script that can be used in a pipeline for approval: link:p
 
 After approving the `InstallPlan` a `ClusterServiceVersion` should show up in the namespace representing the operator installation and of course a `Pod` that's the operator itself. 
 
-
 [NOTE]
 Having `admin` permission on the namespace may not be enough to patch the `InstallPlan`, then we need a custom `Role` for the `ServiceAccount` or user executing this step.
 
