@@ -2,11 +2,11 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 {{- if eq .Values.scope "cluster" }}
 metadata:
-  name: cluster
+  name: cluster-scoped
 spec: {}
 {{- else }}
 metadata:
-  name: self
+  name: namespace-scoped
 spec:
   targetNamespaces:
     - {{ .Release.Namespace }}
