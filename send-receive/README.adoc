@@ -131,3 +131,7 @@ You can also run `artemis` within the Pod with `oc exec`:
 oc exec broker-ss-0 -- sh -c '/opt/amq/bin/artemis queue stat --user admin --password admin --url "tcp://$(hostname):61617?sslEnabled=true;verifyHost=false;trustAll=true" --maxRows 99999 --maxColumnSize -1'
 ```
 
+== Performance
+
+Third-party performance benchmark: https://www.meshiq.com/wp-content/uploads/Middleware-Performance-Benchmark-Report-2023.pdf
+
