@@ -56,3 +56,7 @@ In case of acceptor parameters not supported by the _ActiveMQArtemis_ CR (e.g _o
   brokerProperties:
     - "acceptorConfigurations.myacceptor.extraParams.openwireMaxPacketChunkSize=-1"
 ```
+
+== JDBC store
+
+Examples with PostgreSQ: and Oracle JDBC storage: https://github.com/brusdev/activemq-artemis-tutorials/
