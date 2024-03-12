@@ -59,4 +59,4 @@ In case of acceptor parameters not supported by the _ActiveMQArtemis_ CR (e.g _o
 
 == JDBC store
 
-Examples with PostgreSQ: and Oracle JDBC storage: https://github.com/brusdev/activemq-artemis-tutorials/
+Examples with PostgreSQL and Oracle JDBC store: https://github.com/brusdev/activemq-artemis-tutorials/
