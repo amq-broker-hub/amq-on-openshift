@@ -57,6 +57,21 @@ In case of acceptor parameters not supported by the _ActiveMQArtemis_ CR (e.g _o
     - "acceptorConfigurations.myacceptor.extraParams.openwireMaxPacketChunkSize=-1"
 ```
 
+Before Artemis v7.10 where "extraParams" is not supported, you can apply a hack with the operator to get any field appended to the acceptor string, by adding the parameter after a string field (e.g. _enabledProtocols_) in the acceptor spec:
+
+```
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+spec:
+  acceptors:
+    - name: ssl
+      port: 61617
+      protocols: amqp,core,openwire
+      sslEnabled: true
+      sslSecret: broker-tls
+      enabledProtocols: TLSv1.2;minLargeMessageSize=100000
+```
+
 == JDBC store
 
 Examples with PostgreSQL and Oracle JDBC store: https://github.com/brusdev/activemq-artemis-tutorials/
