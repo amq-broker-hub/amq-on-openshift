@@ -9,8 +9,9 @@ Versions at the time of writing:
 
 == Documentation
 
-* Red Hat AMQ Broker v.7.10: https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.10
-** Including operator documentation: https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.10/html/deploying_amq_broker_on_openshift/index
+* Red Hat AMQ Broker v.7.12: https://docs.redhat.com/en/documentation/red_hat_amq_broker/7.12
+** Including operator documentation: https://access.redhat.com/documentation/en-us/red_hat_amq_broker/7.12/html/deploying_amq_broker_on_openshift/index
+** Upstream operator tutorials: https://artemiscloud.io/docs/tutorials/deploybasicimage/
 * Upstream - Artemis User Manual: https://activemq.apache.org/components/artemis/documentation/
 ** I recommend reading this doc first to understand how Artemis works
 
